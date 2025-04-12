@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'docker:latest'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     stages {
         stage('Checkout') {
@@ -12,21 +7,49 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/hiendinhngoc/jenkins-practice.git'
             }
         }
-        stage('Build') {
+        stage('Setup') {
             steps {
-                sh 'docker build -t flask-app:latest .'
+                sh 'pip install -r requirements.txt'
             }
         }
         stage('Test') {
             steps {
-                sh 'docker run flask-app:latest python -m unittest tests/test_app.py'
+                sh 'python -m unittest tests/test_app.py'
             }
         }
-        stage('Deploy') {
+        stage('Run') {
             steps {
-                sh 'echo "Deploying the application..."'
-                sh 'docker run -d -p 5000:5000 flask-app:latest'
+                sh '''
+                    # Debug network information
+                    echo "=== Network Information ==="
+                    ip addr
+                    netstat -tulpn
+                    
+                    # Run Flask with explicit host binding
+                    FLASK_APP=app.py FLASK_ENV=development flask run --host=0.0.0.0 > flask.log 2>&1 &
+                    echo $! > flask.pid
+                    sleep 5
+                    
+                    # Show Flask logs
+                    echo "=== Flask Logs ==="
+                    cat flask.log
+                    
+                    # Test connection
+                    echo "=== Testing Connection ==="
+                    curl -v http://localhost:5000 || true
+                    curl -v http://127.0.0.1:5000 || true
+                '''
             }
+        }
+    }
+    post {
+        always {
+            sh '''
+                if [ -f flask.pid ]; then
+                    kill $(cat flask.pid) || true
+                    rm flask.pid
+                fi
+            '''
         }
     }
 } 

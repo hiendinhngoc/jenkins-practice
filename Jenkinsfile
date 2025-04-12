@@ -9,17 +9,17 @@ pipeline {
         }
         stage('Setup') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh 'python3 -m pip install -r requirements.txt'
             }
         }
         stage('Test') {
             steps {
-                sh 'python -m unittest tests/test_app.py'
+                sh 'python3 -m unittest tests/test_app.py'
             }
         }
         stage('Run') {
             steps {
-                sh 'python app.py'
+                sh 'python3 app.py'
             }
         }
     }

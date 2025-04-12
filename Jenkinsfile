@@ -1,5 +1,10 @@
 pipeline {
-    agent { dockerfile true } // Use a Dockerfile to build the agent
+    agent {
+        docker {
+            image 'docker:latest'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     stages {
         stage('Checkout') {
@@ -14,7 +19,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                sh 'python -m unittest tests/test_app.py'
+                sh 'docker run flask-app:latest python -m unittest tests/test_app.py'
             }
         }
         stage('Deploy') {

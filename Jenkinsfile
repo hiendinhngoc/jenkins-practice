@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'git@github.com:hiendinhngoc/jenkins-practice.git'
+                git 'https://github.com/hiendinhngoc/jenkins-practice.git'
             }
         }
         stage('Build') {
